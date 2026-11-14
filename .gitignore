@@ -8,7 +8,12 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
-
 # Ignorar as configurações da IDE (IntelliJ)
 .idea/
 *.iml
+# Dependências do Node.js
+node_modules/
+# Arquivo de Variáveis de Ambiente (Chaves secretas)
+.env
+# Banco de dados local (para não dar conflito entre a equipe)
+database.sqlite
