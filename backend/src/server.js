@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { initDatabase } from './services/dbService.js';
+import tmdbRoutes from './routes/tmdbRoutes.js';
+import bibliotecaRoutes from './routes/bibliotecaRoutes.js';
 
 dotenv.config();
 
@@ -17,13 +20,22 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// Importação e uso das rotas (Serão ativadas nos próximos passos)
-// import tmdbRoutes from './routes/tmdbRoutes.js';
-// import bibliotecaRoutes from './routes/bibliotecaRoutes.js';
-// app.use('/api/tmdb', tmdbRoutes);
-// app.use('/api/biblioteca', bibliotecaRoutes);
+app.use('/api/tmdb', tmdbRoutes);
+app.use('/api/biblioteca', bibliotecaRoutes);
 
-
-app.listen(PORT, () => {
-    console.log(`[Servidor] Rodando na porta ${PORT}`);
+app.use((req, res) => {
+    res.status(404).json({
+        erro: `Rota não encontrada: ${req.method} ${req.originalUrl}`
+    });
 });
+
+initDatabase()
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`[Servidor] Rodando na porta ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error('[Banco] Falha ao inicializar o SQLite:', error);
+        process.exit(1);
+    });
