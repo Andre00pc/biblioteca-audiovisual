@@ -5,6 +5,8 @@
     padding: 20px 12px;
     background: #0a0e15;
     border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
 }
 
 .logo {
@@ -58,8 +60,9 @@
 }
 
 #menu a.active {
-    background: var(--accent);
+    background: rgba(139, 92, 246, .15);
     color: #fff;
+    font-weight: 700;
 }
 
 #main-content {
@@ -89,6 +92,11 @@
 .section-head a {
     font-size: .8rem;
     color: var(--accent-light);
+    transition: color .15s;
+}
+
+.section-head a:hover {
+    color: #c4b5fd;
 }
 
 .grid {

@@ -15,6 +15,8 @@
     --pink: #f43f5e;
 
     --radius: 16px;
+    --violeta: #8b5cf6;
+    --degrade: linear-gradient(90deg, var(--violeta), #60a5fa);
 }
 
 * {

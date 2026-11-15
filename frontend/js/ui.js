@@ -12,9 +12,7 @@ const STATUS = {
 };
 
 export function anos(c) {
-    if (c.tipo === 'filme') return c.ano_inicio;
-    const fim = c.ano_fim && c.ano_fim !== c.ano_inicio ? '–' + c.ano_fim : '–';
-    return `${c.ano_inicio}${fim}`;
+    return c.data_lancamento ? c.data_lancamento.slice(0, 4) : '–';
 }
 
 export function fmtData(iso) {
@@ -41,7 +39,7 @@ export function cardHTML(c) {
         </button>
         <div class="poster-meta">
           <span class="badge ${cls}">${label}</span>
-          ${c.nota_pessoal ? `<span class="nota">* ${c.nota_pessoal}</span>` : ''}
+          ${c.nota_pessoal ? `<span class="nota">★ ${c.nota_pessoal}</span>` : ''}
         </div>
       </div>
       <h3>${esc(c.titulo)}</h3>
@@ -67,6 +65,34 @@ export function sessaoHTML(s, c) {
         <p>${fmtData(s.data)}${s.comentario ? ` · “${esc(s.comentario)}”` : ''}</p>
       </div>
       ${s.nota ? `<span class="nota">* ${s.nota}</span>` : ''}
+    </div>`;
+}
+
+export function resultadoHTML(r) {
+    return `
+    <button type="button" class="resultado" data-resultado="${r.id_tmdb}">
+      <div class="resultado-thumb" style="${posterStyle(r)}"></div>
+      <div>
+        <h3>${esc(r.titulo)}</h3>
+        <p>${r.tipo === 'filme' ? 'Filme' : 'Série'} · ${anos(r)}</p>
+      </div>
+    </button>`;
+}
+
+export function escolhidoHTML(d) {
+    const meta = [
+        d.tipo === 'filme' ? 'Filme' : 'Série',
+        anos(d),
+        d.duracao ? `${d.duracao} min` : null,
+    ].filter(Boolean).join(' · ');
+
+    return `
+    <div class="escolhido-thumb" style="${posterStyle(d)}"></div>
+    <div>
+      <h3>${esc(d.titulo)}</h3>
+      <p>${esc(meta)}</p>
+      <p>${esc((d.generos || []).join(', '))}</p>
+      <p class="escolhido-sinopse">${esc(d.sinopse || 'Sem sinopse disponível.')}</p>
     </div>`;
 }
 
