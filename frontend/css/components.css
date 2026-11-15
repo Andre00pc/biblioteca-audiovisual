@@ -1,0 +1,199 @@
+.hero {
+    padding: 32px;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.hero small {
+    color: var(--accent-light);
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    margin: 8px 0;
+}
+
+.hero h1 .grad {
+    color: var(--accent-light);
+
+}
+
+.hero p {
+    color: var(--muted);
+    font-size: .85rem;
+}
+
+.stat {
+    padding: 18px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.stat-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    background: color-mix(in srgb, var(--c) 18%, transparent);
+    color: var(--c);
+}
+
+.stat strong {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.stat span {
+    font-size: .75rem;
+    color: var(--muted);
+}
+
+.card {
+    position: relative;
+}
+
+.poster {
+    position: relative;
+    aspect-ratio: 2/3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    padding: 10px;
+    transition: transform .2s, box-shadow .2s;
+}
+
+.card:hover .poster {
+    transform: translateY(-3px);
+}
+
+.poster-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    opacity: .9;
+}
+
+.fav-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(13, 17, 23, .65);
+    color: #fff;
+    font-size: .95rem;
+}
+
+.fav-btn.on {
+    color: var(--pink);
+}
+
+.poster-meta {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.badge {
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: .68rem;
+    font-weight: 700;
+    background: rgba(13, 17, 23, .75);
+}
+
+.badge.fila {
+    color: var(--blue);
+}
+
+.badge.andamento {
+    color: var(--amber);
+}
+
+.badge.ok {
+    color: var(--green);
+}
+
+.nota {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--amber);
+}
+
+.card h3 {
+    margin-top: 10px;
+    font-size: .85rem;
+}
+
+.card p {
+    font-size: .7rem;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.sessao {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.sessao-thumb {
+    width: 36px;
+    height: 52px;
+    border-radius: 6px;
+    background-size: cover;
+    background-position: center;
+    flex: none;
+}
+
+.sessao-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sessao-info h3 {
+    font-size: .85rem;
+}
+
+.sessao-info p {
+    font-size: .7rem;
+    color: var(--muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vazio {
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    grid-column: 1/-1;
+}
