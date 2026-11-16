@@ -1,19 +1,20 @@
 import { api } from './api.js';
-import { cardHTML, statHTML, sessaoHTML, resultadoHTML, escolhidoHTML, vazio } from './ui.js';
-
+import { cardHTML, statHTML, sessaoHTML, resultadoHTML, escolhidoHTML, filtrosHTML, linhaHTML, filaHTML, vazio } from './ui.js';
 const main = document.getElementById('main-content');
+let redesenhar = null;
 
 const ROTAS = {
     'dashboard':       { view: 'dashboard',       init: iniciarDashboard },
-    'colecao':         { view: 'colecao',         init: () => grade(() => true) },
-    'filmes':          { view: 'filmes',          init: () => grade(c => c.tipo === 'filme') },
-    'series':          { view: 'series',          init: () => grade(c => c.tipo === 'serie') },
-    'assistir-depois': { view: 'assistir-depois', init: () => grade(c => c.status_biblioteca === 'Assistir Depois') },
+    'colecao':         { view: 'colecao',         init: () => iniciarLista('todos') },
+    'filmes':          { view: 'filmes',          init: () => iniciarLista('filme') },
+    'series':          { view: 'series',          init: () => iniciarLista('serie') },
+    'assistir-depois': { view: 'assistir-depois', init: iniciarFila },
     'historico':       { view: 'historico',       init: iniciarHistorico },
     'favoritos':       { view: 'favoritos',       init: () => grade(c => c.favorito) },
 };
 
 async function navegar() {
+    redesenhar = null;
     const rota = ROTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'dashboard';
     const r = ROTAS[rota];
 
@@ -30,6 +31,94 @@ async function grade(filtro) {
     main.querySelector('#grid').innerHTML = lista.length
         ? lista.map(cardHTML).join('')
         : vazio('Nada por aqui ainda.');
+}
+
+async function iniciarFila() {
+    const fila = (await api.listarConteudos()).filter(c => c.status_biblioteca === 'Assistir Depois');
+    main.querySelector('#grid').innerHTML = fila.length
+        ? fila.map(filaHTML).join('')
+        : vazio('Sua fila está vazia.');
+}
+
+const semAcento = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+const ORDENACOES = {
+    recentes: (a, b) => b.adicionado - a.adicionado,
+    titulo:   (a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'),
+    ano:      (a, b) => (b.data_lancamento || '').localeCompare(a.data_lancamento || ''),
+    nota:     (a, b) => (b.nota_pessoal || 0) - (a.nota_pessoal || 0),
+};
+
+async function iniciarLista(tipoFixo) {
+    let todos = await api.listarConteudos();
+    const estado = { busca: '', genero: '', ordem: 'recentes', visao: 'grade', tipo: 'todos', status: 'todos' };
+
+    const barra = main.querySelector('#filtros');
+    const grid = main.querySelector('#grid');
+
+    const generos = [...new Set(todos.flatMap(c => c.generos || []))]
+        .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    barra.innerHTML = filtrosHTML(tipoFixo === 'todos', generos);
+
+    function desenhar() {
+        const termo = semAcento(estado.busca);
+        const tipo = tipoFixo === 'todos' ? estado.tipo : tipoFixo;
+
+        const lista = todos
+            .filter(c => tipo === 'todos' || c.tipo === tipo)
+            .filter(c => semAcento(c.titulo).includes(termo))
+            .filter(c => !estado.genero || (c.generos || []).includes(estado.genero))
+            .filter(c => estado.status === 'todos'
+                || (estado.status === 'favoritos' ? c.favorito : c.status_biblioteca === estado.status))
+            .sort(ORDENACOES[estado.ordem]);
+
+        main.querySelector('#contagem').textContent =
+            `${lista.length} ${lista.length === 1 ? 'título' : 'títulos'}`;
+
+        grid.className = estado.visao === 'lista' ? 'lista' : 'grid';
+        grid.innerHTML = lista.length
+            ? lista.map(estado.visao === 'lista' ? linhaHTML : cardHTML).join('')
+            : vazio('Nenhum título encontrado.');
+    }
+
+    barra.addEventListener('input', e => {
+        if (e.target.id !== 'f-busca') return;
+        estado.busca = e.target.value;
+        desenhar();
+    });
+
+    barra.addEventListener('change', e => {
+        if (e.target.id === 'f-genero') estado.genero = e.target.value;
+        if (e.target.id === 'f-ordem') estado.ordem = e.target.value;
+        desenhar();
+    });
+
+    barra.addEventListener('click', e => {
+        const botao = e.target.closest('[data-f-tipo], [data-f-status], [data-f-visao]');
+        if (!botao) return;
+
+        let grupo;
+        if (botao.dataset.fTipo) {
+            estado.tipo = botao.dataset.fTipo;
+            grupo = 'data-f-tipo';
+        } else if (botao.dataset.fStatus) {
+            estado.status = botao.dataset.fStatus;
+            grupo = 'data-f-status';
+        } else {
+            estado.visao = botao.dataset.fVisao;
+            grupo = 'data-f-visao';
+        }
+
+        barra.querySelectorAll(`[${grupo}]`).forEach(b => b.classList.toggle('active', b === botao));
+        desenhar();
+    });
+
+    desenhar();
+
+    redesenhar = async () => {
+        todos = await api.listarConteudos();
+        desenhar();
+    };
 }
 
 async function iniciarHistorico() {
@@ -82,10 +171,21 @@ async function iniciarDashboard() {
 }
 
 main.addEventListener('click', async e => {
+    const mudar = e.target.closest('[data-mudar-estado]');
+    const remover = e.target.closest('[data-remover]');
+    if (!mudar && !remover) return;
+
+    if (mudar) await api.mudarEstado(Number(mudar.dataset.id), mudar.dataset.mudarEstado);
+    if (remover) await api.removerConteudo(Number(remover.dataset.remover));
+
+    navegar();
+});
+
+main.addEventListener('click', async e => {
     const btn = e.target.closest('[data-fav]');
     if (!btn) return;
     await api.alternarFavorito(Number(btn.dataset.fav));
-    navegar();
+    if (redesenhar) redesenhar(); else navegar();
 });
 
 const modal = document.getElementById('modal-adicionar');

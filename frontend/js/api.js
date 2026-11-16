@@ -72,6 +72,17 @@ export const api = {
         return c;
     },
 
+    async mudarEstado(id, estado) {
+        const c = DB.conteudos.find(x => x.id_tmdb === id);
+        c.status_biblioteca = estado;
+        return c;
+    },
+
+    async removerConteudo(id) {
+        const i = DB.conteudos.findIndex(x => x.id_tmdb === id);
+        if (i >= 0) DB.conteudos.splice(i, 1);
+    },
+
     async adicionarConteudo(detalhes, estado) {
         const jaExiste = DB.conteudos.some(c => c.tipo === detalhes.tipo && c.id_tmdb === detalhes.id_tmdb);
         if (jaExiste) return null;

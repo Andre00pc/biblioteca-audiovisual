@@ -118,12 +118,21 @@
     gap: 12px;
 }
 
-.page-title {
-    font-size: 1.6rem;
-    font-weight: 800;
+.page-cabecalho {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     margin-bottom: 24px;
 }
 
+.page-cabecalho .page-title {
+    margin: 0;
+}
+
+.page-sub {
+    font-size: .9rem;
+    color: var(--muted);
+}
 @media (max-width: 760px) {
     body {
         flex-direction: column;

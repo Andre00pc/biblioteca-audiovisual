@@ -551,3 +551,159 @@
 .check input {
     accent-color: var(--accent);
 }
+
+.filtros {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    color-scheme: dark;
+}
+
+.filtros-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.filtros-chips {
+    gap: 8px;
+}
+
+.filtros-busca {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filtros-busca input,
+.filtros select {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 400;
+}
+
+.filtros select {
+    appearance: none;
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b97ab' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+}
+
+.filtros select:focus {
+    outline: none;
+    border-color: var(--accent-light);
+}
+
+.filtros .alternar {
+    grid-template-columns: repeat(2, 28px);
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: #1a2232;
+}
+
+.filtros .alternar-btn {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: .8rem;
+}
+
+.filtros .alternar-btn.active {
+    background: #000;
+    color: #fff;
+}
+
+.filtros-divisor {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+}
+
+.chip {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: #1a2232;
+    color: var(--muted);
+    font-size: .75rem;
+    font-weight: 600;
+    transition: background .15s, color .15s;
+}
+
+.chip:hover {
+    color: var(--text);
+}
+
+.chip.active {
+    background: var(--violeta);
+    color: #fff;
+}
+.chip-icone {
+    margin-right: 6px;
+}
+.contagem {
+    margin: 20px 0 14px;
+    font-size: .8rem;
+    color: var(--muted);
+}
+
+.lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-texto.on {
+    color: var(--pink);
+}
+
+.fila-item {
+    padding: 12px 14px;
+    transition: border-color .15s;
+}
+
+.fila-item:hover {
+    border-color: var(--violeta);
+}
+
+.fila-item .sessao-thumb {
+    width: 42px;
+    height: 62px;
+}
+
+.fila-item .sessao-info .badge {
+    display: inline-block;
+    margin-top: 6px;
+}
+
+.fila-acoes {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-pequeno {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: .75rem;
+}
+
+.btn-escuro {
+    background: #1a2232;
+}
