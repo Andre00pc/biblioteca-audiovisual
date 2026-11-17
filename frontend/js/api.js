@@ -54,7 +54,11 @@ const DB = {
             adicionado: 3,
         },
     ],
-    sessoes: [],
+    sessoes: [
+        { id_avaliacao: 1, id_tmdb: 1, data: '2026-10-18', nota: 9.5, comentario: 'Comentário de teste.' },
+        { id_avaliacao: 2, id_tmdb: 1, data: '2026-09-22', nota: null, comentario: '' },
+        { id_avaliacao: 3, id_tmdb: 1, data: '2026-07-02', nota: null, comentario: '' },
+    ],
 };
 
 export const api = {
@@ -81,6 +85,10 @@ export const api = {
     async removerConteudo(id) {
         const i = DB.conteudos.findIndex(x => x.id_tmdb === id);
         if (i >= 0) DB.conteudos.splice(i, 1);
+        DB.sessoes = DB.sessoes.filter(s => s.id_tmdb !== id);
+    },
+    async removerSessao(id) {
+        DB.sessoes = DB.sessoes.filter(s => s.id_avaliacao !== id);
     },
 
     async adicionarConteudo(detalhes, estado) {

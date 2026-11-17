@@ -96,7 +96,7 @@ export function escolhidoHTML(d) {
     </div>`;
 }
 
-export function filtrosHTML(mostrarTipo, generos) {
+export function filtrosHTML(mostrarTipo, generos, mostrarFavoritos = true) {
     const chip = (atributo, valor, texto, ativo) =>
         `<button type="button" class="chip ${ativo ? 'active' : ''}" ${atributo}="${valor}">${texto}</button>`;
 
@@ -136,7 +136,7 @@ export function filtrosHTML(mostrarTipo, generos) {
         ${chip('data-f-status', 'Assistir Depois', 'Quero assistir', false)}
         ${chip('data-f-status', 'Assistindo', 'Assistindo', false)}
         ${chip('data-f-status', 'Concluído', 'Assistido', false)}
-        ${chip('data-f-status', 'favoritos', '<span class="chip-icone">♡</span>Favoritos', false)}
+        ${mostrarFavoritos ? chip('data-f-status', 'favoritos', '<span class="chip-icone">♡</span>Favoritos', false) : ''}
       </div>
 
     </div>`;
@@ -182,4 +182,57 @@ export function filaHTML(c) {
     </div>`;
 }
 
+export function reassistidosHTML(lista) {
+    if (!lista.length) return '';
+    return `
+    <div class="section-head">
+      <h2><span class="icone-secao">⇄</span>Mais reassistidos</h2>
+    </div>
+    <div class="reassistidos">
+      ${lista.map(({ conteudo: c, vezes }, i) => `
+        <article class="card">
+          <div class="poster" style="${posterStyle(c)}">
+            ${c.poster_url ? '' : `<div class="poster-fallback">${esc(c.titulo)}</div>`}
+            <span class="badge badge-rank">#${i + 1}</span>
+          </div>
+          <h3>${esc(c.titulo)}</h3>
+          <p>${vezes} vezes</p>
+        </article>`).join('')}
+    </div>`;
+}
+
+export function sessaoHistoricoHTML(s, c) {
+    return `
+    <div class="sessao hist-item">
+      <div class="sessao-thumb" style="${posterStyle(c)}"></div>
+      <div class="sessao-info">
+        <h3>${esc(c.titulo)}</h3>
+        <p>${fmtData(s.data)}</p>
+        ${s.comentario ? `<p>“${esc(s.comentario)}”</p>` : ''}
+      </div>
+      ${s.nota ? `<span class="nota">★ ${s.nota}</span>` : ''}
+      <button type="button" class="btn-texto" data-remover-sessao="${s.id_avaliacao}" aria-label="Excluir sessão">×</button>
+    </div>`;
+}
+
+
+export function mesesHTML(sessoes, conteudos) {
+    const grupos = [];
+
+    for (const s of sessoes) {
+        const mes = new Date(s.data + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        let grupo = grupos.find(g => g.mes === mes);
+        if (!grupo) {
+            grupo = { mes, itens: [] };
+            grupos.push(grupo);
+        }
+        grupo.itens.push(s);
+    }
+
+    return grupos.map(g => `
+      <h3 class="mes">${g.mes}</h3>
+      <div class="mes-grupo">
+        ${g.itens.map(s => sessaoHistoricoHTML(s, conteudos.find(c => c.id_tmdb === s.id_tmdb))).join('')}
+      </div>`).join('');
+}
 export const vazio = msg => `<div class="vazio">${esc(msg)}</div>`;

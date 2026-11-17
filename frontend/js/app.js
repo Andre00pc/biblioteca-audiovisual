@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { cardHTML, statHTML, sessaoHTML, resultadoHTML, escolhidoHTML, filtrosHTML, linhaHTML, filaHTML, vazio } from './ui.js';
+import { cardHTML, statHTML, sessaoHTML, resultadoHTML, escolhidoHTML, filtrosHTML, linhaHTML, filaHTML, reassistidosHTML, mesesHTML, vazio } from './ui.js';
 const main = document.getElementById('main-content');
 let redesenhar = null;
 
@@ -10,7 +10,7 @@ const ROTAS = {
     'series':          { view: 'series',          init: () => iniciarLista('serie') },
     'assistir-depois': { view: 'assistir-depois', init: iniciarFila },
     'historico':       { view: 'historico',       init: iniciarHistorico },
-    'favoritos':       { view: 'favoritos',       init: () => grade(c => c.favorito) },
+    'favoritos':       { view: 'favoritos',       init: () => iniciarLista('todos', true) },
 };
 
 async function navegar() {
@@ -25,13 +25,15 @@ async function navegar() {
     main.innerHTML = await fetch(`views/${r.view}.html`).then(res => res.text());
     await r.init();
 }
-
+/*
 async function grade(filtro) {
     const lista = (await api.listarConteudos()).filter(filtro);
     main.querySelector('#grid').innerHTML = lista.length
         ? lista.map(cardHTML).join('')
         : vazio('Nada por aqui ainda.');
 }
+
+ */
 
 async function iniciarFila() {
     const fila = (await api.listarConteudos()).filter(c => c.status_biblioteca === 'Assistir Depois');
@@ -49,16 +51,16 @@ const ORDENACOES = {
     nota:     (a, b) => (b.nota_pessoal || 0) - (a.nota_pessoal || 0),
 };
 
-async function iniciarLista(tipoFixo) {
+async function iniciarLista(tipoFixo, somenteFavoritos = false) {
     let todos = await api.listarConteudos();
     const estado = { busca: '', genero: '', ordem: 'recentes', visao: 'grade', tipo: 'todos', status: 'todos' };
 
     const barra = main.querySelector('#filtros');
     const grid = main.querySelector('#grid');
 
-    const generos = [...new Set(todos.flatMap(c => c.generos || []))]
+    const generos = [...new Set(todos.filter(c => !somenteFavoritos || c.favorito).flatMap(c => c.generos || []))]
         .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-    barra.innerHTML = filtrosHTML(tipoFixo === 'todos', generos);
+    barra.innerHTML = filtrosHTML(tipoFixo === 'todos', generos, !somenteFavoritos);
 
     function desenhar() {
         const termo = semAcento(estado.busca);
@@ -66,6 +68,7 @@ async function iniciarLista(tipoFixo) {
 
         const lista = todos
             .filter(c => tipo === 'todos' || c.tipo === tipo)
+            .filter(c => !somenteFavoritos || c.favorito)
             .filter(c => semAcento(c.titulo).includes(termo))
             .filter(c => !estado.genero || (c.generos || []).includes(estado.genero))
             .filter(c => estado.status === 'todos'
@@ -120,11 +123,33 @@ async function iniciarLista(tipoFixo) {
         desenhar();
     };
 }
-
+/*
 async function iniciarHistorico() {
     const [cs, ss] = await Promise.all([api.listarConteudos(), api.listarSessoes()]);
     main.querySelector('#sessoes').innerHTML = ss.length
         ? ss.map(s => sessaoHTML(s, cs.find(c => c.id_tmdb === s.id_tmdb))).join('')
+        : vazio('Nenhuma sessão registrada.');
+}
+
+ */
+async function iniciarHistorico() {
+    const [cs, ss] = await Promise.all([api.listarConteudos(), api.listarSessoes()]);
+
+    const sessoes = ss.filter(s => cs.some(c => c.id_tmdb === s.id_tmdb));
+    const contagem = {};
+    sessoes.forEach(s => {
+        contagem[s.id_tmdb] = (contagem[s.id_tmdb] || 0) + 1;
+    });
+
+    const reassistidos = Object.entries(contagem)
+        .filter(([, vezes]) => vezes >= 2)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([id, vezes]) => ({ conteudo: cs.find(c => c.id_tmdb === Number(id)), vezes }));
+
+    main.querySelector('#reassistidos').innerHTML = reassistidosHTML(reassistidos);
+    main.querySelector('#sessoes').innerHTML = sessoes.length
+        ? mesesHTML(sessoes, cs)
         : vazio('Nenhuma sessão registrada.');
 }
 
@@ -186,6 +211,13 @@ main.addEventListener('click', async e => {
     if (!btn) return;
     await api.alternarFavorito(Number(btn.dataset.fav));
     if (redesenhar) redesenhar(); else navegar();
+});
+
+main.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-remover-sessao]');
+    if (!btn) return;
+    await api.removerSessao(Number(btn.dataset.removerSessao));
+    navegar();
 });
 
 const modal = document.getElementById('modal-adicionar');
@@ -307,7 +339,5 @@ formAdicionar.addEventListener('submit', async e => {
     navegar();
 });
 
-window.addEventListener('hashchange', navegar);
-navegar();
 window.addEventListener('hashchange', navegar);
 navegar();

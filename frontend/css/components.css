@@ -707,3 +707,59 @@
 .btn-escuro {
     background: #1a2232;
 }
+
+.icone-secao {
+    margin-right: 8px;
+    color: var(--violeta);
+}
+
+.reassistidos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.reassistidos .card {
+    width: 108px;
+}
+
+.badge-rank {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--degrade);
+    color: #fff;
+}
+
+.mes {
+    margin: 32px 0 12px;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.mes-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+}
+
+.hist-item {
+    position: relative;
+}
+
+.hist-item::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -21px;
+    width: 9px;
+    height: 9px;
+    margin-top: -4.5px;
+    border-radius: 50%;
+    background: var(--violeta);
+}
