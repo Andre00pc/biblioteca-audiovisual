@@ -236,6 +236,13 @@ main.addEventListener('click', async e => {
         return;
     }
 
+    const removerNota = e.target.closest('[data-remover-nota]');
+    if (removerNota) {
+        await api.avaliarConteudo(Number(removerNota.dataset.removerNota), null);
+        navegar();
+        return;
+    }
+
     const comentar = e.target.closest('[data-comentar]');
     if (comentar) {
         abrirModalComentario(Number(comentar.dataset.comentar));

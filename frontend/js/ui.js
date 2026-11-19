@@ -334,14 +334,21 @@ export function detalheHTML(c, sessoes) {
     </section>
 
     <div class="painel-grade">
-      <section class="painel">
+      <section class="painel painel-avaliacao">
         <div class="section-head">
           <h2>Minha avaliação</h2>
-          ${c.nota_pessoal != null ? `<button type="button" class="btn-texto btn-pequeno" data-avaliar="${c.id_tmdb}">Editar</button>` : ''}
+          ${c.nota_pessoal != null ? `
+            <span class="sessao-det-acoes">
+              <button type="button" class="btn-texto btn-pequeno" data-avaliar="${c.id_tmdb}">Editar</button>
+              <button type="button" class="btn-texto btn-pequeno btn-perigo" data-remover-nota="${c.id_tmdb}" aria-label="Remover avaliação">×</button>
+            </span>` : ''}
         </div>
         ${c.nota_pessoal != null
         ? `<p class="painel-nota">★ <strong>${c.nota_pessoal}</strong><span>/10</span></p>`
-        : `<button type="button" class="vazio vazio-acao" data-avaliar="${c.id_tmdb}">☆ Avaliar conteúdo</button>`}
+        : `<button type="button" class="vazio vazio-acao" data-avaliar="${c.id_tmdb}">
+                 <span class="vazio-icone">☆</span>
+                 Avaliar conteúdo
+               </button>`}        
       </section>
 
       <section class="painel">
