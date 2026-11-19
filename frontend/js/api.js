@@ -33,7 +33,17 @@ const CATALOGO_TMDB = [
         nota_tmdb: 8.7,
         generos: ['Drama', 'Suspense'],
         status_producao: 'Ended',
+        temporadas: [
+            { id_tmdb_temporada: 2011, id_tmdb_serie: 201, numero_temporada: 1, nome: 'Temporada 1', total_episodios: 3 },
+            { id_tmdb_temporada: 2012, id_tmdb_serie: 201, numero_temporada: 2, nome: 'Temporada 2', total_episodios: 2 },
+        ],
     },
+];
+
+const EPISODIOS_TESTE = [
+    { id_tmdb_episodio: 1, numero_episodio: 1, titulo: 'Episódio de teste 1', sinopse: '', duracao: 60, data_exibicao: '2017-12-01' },
+    { id_tmdb_episodio: 2, numero_episodio: 2, titulo: 'Episódio de teste 2', sinopse: '', duracao: 55, data_exibicao: '2017-12-08' },
+    { id_tmdb_episodio: 3, numero_episodio: 3, titulo: 'Episódio de teste 3', sinopse: '', duracao: 58, data_exibicao: '2017-12-15' },
 ];
 
 const DB = {
@@ -54,10 +64,11 @@ const DB = {
             adicionado: 3,
         },
     ],
+
     sessoes: [
-        { id_avaliacao: 1, id_tmdb: 1, data: '2026-10-18', nota: 9.5, comentario: 'Comentário de teste.' },
-        { id_avaliacao: 2, id_tmdb: 1, data: '2026-09-22', nota: null, comentario: '' },
-        { id_avaliacao: 3, id_tmdb: 1, data: '2026-07-02', nota: null, comentario: '' },
+        { id_sessao: 1, id_tmdb: 1, data: '2026-10-18', comentarios: ['Comentário de teste.', 'Outro comentário da mesma sessão.'] },
+        { id_sessao: 2, id_tmdb: 1, data: '2026-09-22', comentarios: [] },
+        { id_sessao: 3, id_tmdb: 1, data: '2026-07-02', comentarios: [] },
     ],
 };
 
@@ -68,6 +79,10 @@ export const api = {
 
     async listarSessoes() {
         return [...DB.sessoes].sort((a, b) => b.data.localeCompare(a.data));
+    },
+
+    async buscarConteudo(id) {
+        return DB.conteudos.find(x => x.id_tmdb === id) || null;
     },
 
     async alternarFavorito(id) {
@@ -87,8 +102,30 @@ export const api = {
         if (i >= 0) DB.conteudos.splice(i, 1);
         DB.sessoes = DB.sessoes.filter(s => s.id_tmdb !== id);
     },
+
+    async avaliarConteudo(id, nota) {
+        const c = DB.conteudos.find(x => x.id_tmdb === id);
+        c.nota_pessoal = nota;
+        return c;
+    },
+
+    async registrarSessao(id, { data, comentario }) {
+        const id_sessao = Math.max(0, ...DB.sessoes.map(s => s.id_sessao)) + 1;
+        DB.sessoes.push({
+            id_sessao,
+            id_tmdb: id,
+            data,
+            comentarios: comentario ? [comentario] : [],
+        });
+    },
+
+    async adicionarComentario(idSessao, texto) {
+        const s = DB.sessoes.find(x => x.id_sessao === idSessao);
+        if (s) s.comentarios.push(texto);
+    },
+
     async removerSessao(id) {
-        DB.sessoes = DB.sessoes.filter(s => s.id_avaliacao !== id);
+        DB.sessoes = DB.sessoes.filter(s => s.id_sessao !== id);
     },
 
     async adicionarConteudo(detalhes, estado) {
@@ -118,5 +155,10 @@ export const api = {
 
     async detalhes(tipo, id) {
         return CATALOGO_TMDB.find(c => c.tipo === tipo && c.id_tmdb === id);
+    },
+
+    async temporada(idSerie, numero) {
+        const total = numero === 1 ? 3 : 2;
+        return { numero_temporada: numero, episodios: EPISODIOS_TESTE.slice(0, total) };
     },
 };

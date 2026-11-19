@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { cardHTML, statHTML, sessaoHTML, resultadoHTML, escolhidoHTML, filtrosHTML, linhaHTML, filaHTML, reassistidosHTML, mesesHTML, vazio } from './ui.js';
+import { cardHTML, statHTML, sessaoHTML, resultadoHTML, escolhidoHTML, filtrosHTML, linhaHTML, filaHTML, reassistidosHTML, mesesHTML, detalheHTML, episodiosHTML, vazio } from './ui.js';
 const main = document.getElementById('main-content');
 let redesenhar = null;
 
@@ -11,11 +11,14 @@ const ROTAS = {
     'assistir-depois': { view: 'assistir-depois', init: iniciarFila },
     'historico':       { view: 'historico',       init: iniciarHistorico },
     'favoritos':       { view: 'favoritos',       init: () => iniciarLista('todos', true) },
+    'detalhe':         { view: 'detalhe',         init: iniciarDetalhe },
 };
 
 async function navegar() {
     redesenhar = null;
-    const rota = ROTAS[location.hash.slice(1)] ? location.hash.slice(1) : 'dashboard';
+
+    const [nome, ...params] = location.hash.slice(1).split('/');
+    const rota = ROTAS[nome] ? nome : 'dashboard';
     const r = ROTAS[rota];
 
     document.querySelectorAll('#menu a').forEach(a => {
@@ -23,23 +26,27 @@ async function navegar() {
     });
 
     main.innerHTML = await fetch(`views/${r.view}.html`).then(res => res.text());
-    await r.init();
+    await r.init(...params);
 }
-/*
-async function grade(filtro) {
-    const lista = (await api.listarConteudos()).filter(filtro);
-    main.querySelector('#grid').innerHTML = lista.length
-        ? lista.map(cardHTML).join('')
-        : vazio('Nada por aqui ainda.');
-}
-
- */
 
 async function iniciarFila() {
     const fila = (await api.listarConteudos()).filter(c => c.status_biblioteca === 'Assistir Depois');
     main.querySelector('#grid').innerHTML = fila.length
         ? fila.map(filaHTML).join('')
         : vazio('Sua fila está vazia.');
+}
+
+async function iniciarDetalhe(id) {
+    const alvo = main.querySelector('#detalhe');
+    const conteudo = await api.buscarConteudo(Number(id));
+
+    if (!conteudo) {
+        alvo.innerHTML = vazio('Título não encontrado na sua biblioteca.');
+        return;
+    }
+
+    const sessoes = (await api.listarSessoes()).filter(s => s.id_tmdb === conteudo.id_tmdb);
+    alvo.innerHTML = detalheHTML(conteudo, sessoes);
 }
 
 const semAcento = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -123,15 +130,7 @@ async function iniciarLista(tipoFixo, somenteFavoritos = false) {
         desenhar();
     };
 }
-/*
-async function iniciarHistorico() {
-    const [cs, ss] = await Promise.all([api.listarConteudos(), api.listarSessoes()]);
-    main.querySelector('#sessoes').innerHTML = ss.length
-        ? ss.map(s => sessaoHTML(s, cs.find(c => c.id_tmdb === s.id_tmdb))).join('')
-        : vazio('Nenhuma sessão registrada.');
-}
 
- */
 async function iniciarHistorico() {
     const [cs, ss] = await Promise.all([api.listarConteudos(), api.listarSessoes()]);
 
@@ -218,6 +217,80 @@ main.addEventListener('click', async e => {
     if (!btn) return;
     await api.removerSessao(Number(btn.dataset.removerSessao));
     navegar();
+});
+
+main.addEventListener('click', async e => {
+    if (e.target.closest('[data-voltar]')) {
+        history.back();
+        return;
+    }
+    const registrar = e.target.closest('[data-registrar]');
+    if (registrar) {
+        abrirModalSessao(Number(registrar.dataset.registrar));
+        return;
+    }
+
+    const avaliar = e.target.closest('[data-avaliar]');
+    if (avaliar) {
+        abrirModalAvaliacao(Number(avaliar.dataset.avaliar));
+        return;
+    }
+
+    const comentar = e.target.closest('[data-comentar]');
+    if (comentar) {
+        abrirModalComentario(Number(comentar.dataset.comentar));
+        return;
+    }
+
+    const verMais = e.target.closest('[data-ver-mais]');
+    if (verMais) {
+        const passo = Number(verMais.dataset.passo);
+        const lista = verMais.previousElementSibling;
+        lista.querySelectorAll('.sessao-det[hidden]').forEach((el, i) => {
+            if (i < passo) el.hidden = false;
+        });
+
+        const restantes = lista.querySelectorAll('.sessao-det[hidden]').length;
+        if (restantes) verMais.textContent = `Ver mais (${restantes})`;
+        else verMais.remove();
+        return;
+    }
+
+    const excluir = e.target.closest('[data-excluir]');
+    if (excluir) {
+        await api.removerConteudo(Number(excluir.dataset.excluir));
+        location.hash = '#colecao';
+        return;
+    }
+    const cab = e.target.closest('[data-temporada]');
+    if (cab) {
+        const area = cab.nextElementSibling;
+        const abrir = area.hidden;
+        area.hidden = !abrir;
+        cab.setAttribute('aria-expanded', abrir);
+
+        if (abrir && !area.dataset.carregado) {
+            area.innerHTML = vazio('Carregando...');
+            try {
+                const t = await api.temporada(Number(cab.dataset.serie), Number(cab.dataset.temporada));
+                area.innerHTML = episodiosHTML(t.episodios);
+                area.dataset.carregado = '1';
+            } catch (erro) {
+                area.innerHTML = vazio(erro.message);
+            }
+        }
+        return;
+    }
+    const alvo = e.target.closest('[data-href]');
+    if (alvo && !e.target.closest('button')) {
+        location.hash = alvo.dataset.href;
+    }
+});
+
+main.addEventListener('change', async e => {
+    const seletor = e.target.closest('[data-estado-select]');
+    if (!seletor) return;
+    await api.mudarEstado(Number(seletor.dataset.estadoSelect), seletor.value);
 });
 
 const modal = document.getElementById('modal-adicionar');
@@ -339,5 +412,97 @@ formAdicionar.addEventListener('submit', async e => {
     navegar();
 });
 
-window.addEventListener('hashchange', navegar);
+document.querySelectorAll('dialog').forEach(d => {
+    d.addEventListener('click', e => {
+        if (e.target.closest('[data-fechar]') || e.target === d) d.close();
+    });
+});
+
+const modalSessao = document.getElementById('modal-sessao');
+const formSessao = document.getElementById('form-sessao');
+let conteudoSessao = null;
+
+async function abrirModalSessao(id) {
+    conteudoSessao = await api.buscarConteudo(id);
+    formSessao.reset();
+    document.getElementById('sessao-data').value = new Date().toLocaleDateString('en-CA');
+    document.getElementById('sessao-sub').textContent =
+        `Quando você assistiu ${conteudoSessao.titulo}? Se quiser, deixe um comentário desta vez.`;
+    modalSessao.showModal();
+}
+
+formSessao.addEventListener('submit', async e => {
+    e.preventDefault();
+    const dados = new FormData(formSessao);
+    await api.registrarSessao(conteudoSessao.id_tmdb, {
+        data: dados.get('data'),
+        comentario: dados.get('comentario').trim(),
+    });
+    modalSessao.close();
+    navegar();
+});
+
+const modalAvaliacao = document.getElementById('modal-avaliacao');
+const formAvaliacao = document.getElementById('form-avaliacao');
+const notasAvaliacao = document.getElementById('avaliacao-notas');
+const btnSalvarAvaliacao = document.getElementById('btn-salvar-avaliacao');
+let conteudoAvaliacao = null;
+let notaAvaliacao = null;
+
+notasAvaliacao.innerHTML = Array.from({ length: 11 }, (_, n) =>
+    `<button type="button" class="chip" data-nota="${n}">${n}</button>`
+).join('');
+
+function marcarNota(n) {
+    notaAvaliacao = n;
+    notasAvaliacao.querySelectorAll('.chip').forEach(c => {
+        c.classList.toggle('active', Number(c.dataset.nota) === n);
+    });
+    btnSalvarAvaliacao.disabled = n === null;
+}
+
+async function abrirModalAvaliacao(id) {
+    conteudoAvaliacao = await api.buscarConteudo(id);
+    document.getElementById('avaliacao-titulo').textContent = `Avaliar ${conteudoAvaliacao.titulo}`;
+    marcarNota(conteudoAvaliacao.nota_pessoal ?? null);
+    modalAvaliacao.showModal();
+}
+
+notasAvaliacao.addEventListener('click', e => {
+    const btn = e.target.closest('[data-nota]');
+    if (btn) marcarNota(Number(btn.dataset.nota));
+});
+
+formAvaliacao.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (notaAvaliacao === null) return;
+    await api.avaliarConteudo(conteudoAvaliacao.id_tmdb, notaAvaliacao);
+    modalAvaliacao.close();
+    navegar();
+});
+
+const modalComentario = document.getElementById('modal-comentario');
+const formComentario = document.getElementById('form-comentario');
+let sessaoComentario = null;
+
+function abrirModalComentario(idSessao) {
+    sessaoComentario = idSessao;
+    formComentario.reset();
+    modalComentario.showModal();
+}
+
+formComentario.addEventListener('submit', async e => {
+    e.preventDefault();
+    const texto = new FormData(formComentario).get('comentario').trim();
+    if (!texto) return;
+    await api.adicionarComentario(sessaoComentario, texto);
+    modalComentario.close();
+    navegar();
+});
+
+window.addEventListener('hashchange', () => {
+    window.scrollTo(0, 0);
+    navegar();
+});
+
 navegar();

@@ -11,6 +11,21 @@ const STATUS = {
     'Concluído':       ['Assistido', 'ok'],
 };
 
+const PRODUCAO = {
+    'Returning Series': 'Em andamento',
+    'In Production': 'Em produção',
+    'Ended': 'Finalizada',
+    'Canceled': 'Cancelada',
+};
+
+function fmtDuracao(min) {
+    if (!min) return '';
+    return min >= 60 ? `${Math.floor(min / 60)}h ${min % 60}min` : `${min} min`;
+}
+
+const SESSOES_INICIAIS = 2;
+const SESSOES_POR_CLIQUE = 3;
+
 export function anos(c) {
     return c.data_lancamento ? c.data_lancamento.slice(0, 4) : '–';
 }
@@ -31,7 +46,8 @@ function posterStyle(c) {
 export function cardHTML(c) {
     const [label, cls] = STATUS[c.status_biblioteca];
     return `
-    <article class="card">
+    
+    <article class="card" data-href="#detalhe/${c.id_tmdb}">
       <div class="poster" style="${posterStyle(c)}">
         ${c.poster_url ? '' : `<div class="poster-fallback">${esc(c.titulo)}</div>`}
         <button class="fav-btn ${c.favorito ? 'on' : ''}" data-fav="${c.id_tmdb}" aria-label="Favoritar ${esc(c.titulo)}">
@@ -58,13 +74,13 @@ export function statHTML(icone, cor, valor, rotulo) {
 
 export function sessaoHTML(s, c) {
     return `
-    <div class="sessao">
+    <div class="sessao" data-href="#detalhe/${c.id_tmdb}">
       <div class="sessao-thumb" style="${posterStyle(c)}"></div>
       <div class="sessao-info">
         <h3>${esc(c.titulo)}</h3>
-        <p>${fmtData(s.data)}${s.comentario ? ` · “${esc(s.comentario)}”` : ''}</p>
+        <p>${fmtData(s.data)}${s.comentarios?.[0] ? ` · “${esc(s.comentarios[0])}”` : ''}</p>
       </div>
-      ${s.nota ? `<span class="nota">★ ${s.nota}</span>` : ''}
+      ${c.nota_pessoal != null ? `<span class="nota">★ ${c.nota_pessoal}</span>` : ''}
     </div>`;
 }
 
@@ -145,7 +161,7 @@ export function filtrosHTML(mostrarTipo, generos, mostrarFavoritos = true) {
 export function linhaHTML(c) {
     const [label, cls] = STATUS[c.status_biblioteca];
     return `
-    <div class="sessao">
+    <div class="sessao" data-href="#detalhe/${c.id_tmdb}">
       <div class="sessao-thumb" style="${posterStyle(c)}"></div>
       <div class="sessao-info">
         <h3>${esc(c.titulo)}</h3>
@@ -167,7 +183,7 @@ export function filaHTML(c) {
     ].filter(Boolean).join(' · ');
 
     return `
-    <div class="sessao fila-item">
+    <div class="sessao fila-item" data-href="#detalhe/${c.id_tmdb}">
       <div class="sessao-thumb" style="${posterStyle(c)}"></div>
       <div class="sessao-info">
         <h3>${esc(c.titulo)}</h3>
@@ -190,7 +206,7 @@ export function reassistidosHTML(lista) {
     </div>
     <div class="reassistidos">
       ${lista.map(({ conteudo: c, vezes }, i) => `
-        <article class="card">
+        <article class="card" data-href="#detalhe/${c.id_tmdb}">
           <div class="poster" style="${posterStyle(c)}">
             ${c.poster_url ? '' : `<div class="poster-fallback">${esc(c.titulo)}</div>`}
             <span class="badge badge-rank">#${i + 1}</span>
@@ -208,10 +224,10 @@ export function sessaoHistoricoHTML(s, c) {
       <div class="sessao-info">
         <h3>${esc(c.titulo)}</h3>
         <p>${fmtData(s.data)}</p>
-        ${s.comentario ? `<p>“${esc(s.comentario)}”</p>` : ''}
+        ${(s.comentarios || []).map(t => `<p>“${esc(t)}”</p>`).join('')}
       </div>
-      ${s.nota ? `<span class="nota">★ ${s.nota}</span>` : ''}
-      <button type="button" class="btn-texto" data-remover-sessao="${s.id_avaliacao}" aria-label="Excluir sessão">×</button>
+      ${c.nota_pessoal != null ? `<span class="nota">★ ${c.nota_pessoal}</span>` : ''}
+      <button type="button" class="btn-texto" data-remover-sessao="${s.id_sessao}" aria-label="Excluir sessão">×</button>
     </div>`;
 }
 
@@ -235,4 +251,112 @@ export function mesesHTML(sessoes, conteudos) {
         ${g.itens.map(s => sessaoHistoricoHTML(s, conteudos.find(c => c.id_tmdb === s.id_tmdb))).join('')}
       </div>`).join('');
 }
+
+function sessaoDetalheHTML(s, oculta = false) {
+    return `
+    <div class="sessao sessao-det" ${oculta ? 'hidden' : ''}>
+      <div class="sessao-det-topo">
+        <strong>${fmtData(s.data)}</strong>
+        <span class="sessao-det-acoes">
+          <button type="button" class="btn-texto" data-comentar="${s.id_sessao}">+ Comentar</button>
+          <button type="button" class="btn-texto" data-remover-sessao="${s.id_sessao}" aria-label="Excluir sessão">×</button>
+        </span>
+      </div>
+      ${(s.comentarios || []).map(t => `<p class="comentario">“${esc(t)}”</p>`).join('')}
+    </div>`;
+}
+
+function temporadasHTML(c) {
+    const lista = c.temporadas || [];
+    return `
+    <section class="painel painel-largo">
+      <h2 class="painel-titulo">Temporadas</h2>
+      ${lista.map(t => `
+        <div>
+          <button type="button" class="temporada-cab" data-serie="${c.id_tmdb}" data-temporada="${t.numero_temporada}" aria-expanded="false">
+            <strong>${esc(t.nome)}</strong>
+            <span>${t.total_episodios} ${t.total_episodios === 1 ? 'episódio' : 'episódios'}</span>
+            <span class="seta">⌄</span>
+          </button>
+          <div class="episodios" hidden></div>
+        </div>`).join('') || '<p class="painel-sub">Sem temporadas disponíveis.</p>'}
+    </section>`;
+}
+
+export function episodiosHTML(lista) {
+    return lista.map(ep => `
+    <div class="episodio">
+      <span class="episodio-num">${ep.numero_episodio}</span>
+      <span class="episodio-titulo">${esc(ep.titulo)}</span>
+      <span class="episodio-min">${ep.duracao ? `${ep.duracao} min` : ''}</span>
+    </div>`).join('') || '<p class="painel-sub">Nenhum episódio disponível.</p>';
+}
+
+export function detalheHTML(c, sessoes) {
+    const meta = (c.tipo === 'filme'
+            ? [anos(c), fmtDuracao(c.duracao)]
+            : [
+                `${anos(c)}–`,
+                PRODUCAO[c.status_producao] || c.status_producao,
+                c.temporadas?.length ? `${c.temporadas.length} ${c.temporadas.length === 1 ? 'temporada' : 'temporadas'}` : null,
+            ]
+    ).filter(Boolean).join(' · ');
+
+    const opcoes = Object.entries(STATUS).map(([valor, [rotulo]]) =>
+        `<option value="${valor}" ${valor === c.status_biblioteca ? 'selected' : ''}>${rotulo}</option>`
+    ).join('');
+
+    return `
+    <section class="hero detalhe-topo">
+      <div class="poster detalhe-poster" style="${posterStyle(c)}">
+        ${c.poster_url ? '' : `<div class="poster-fallback">${esc(c.titulo)}</div>`}
+        <button class="fav-btn ${c.favorito ? 'on' : ''}" data-fav="${c.id_tmdb}" aria-label="Favoritar ${esc(c.titulo)}">
+          ${c.favorito ? '♥' : '♡'}
+        </button>
+      </div>
+
+      <div class="detalhe-info">
+        <small>${c.tipo === 'filme' ? 'Filme' : 'Série'}</small>
+        <h1>${esc(c.titulo)}</h1>
+        <p>${esc(meta)}</p>
+        <p class="detalhe-sinopse">${esc(c.sinopse || 'Sem sinopse disponível.')}</p>
+
+        <div class="filtros-linha filtros-chips">
+          ${(c.generos || []).map(g => `<span class="chip">${esc(g)}</span>`).join('')}
+        </div>
+
+        <div class="detalhe-acoes">
+          <select data-estado-select="${c.id_tmdb}" aria-label="Estado">${opcoes}</select>
+          <button type="button" class="btn btn-pequeno btn-degrade" data-registrar="${c.id_tmdb}">Registrar assistência</button>
+          <button type="button" class="btn-texto btn-perigo" data-excluir="${c.id_tmdb}" aria-label="Excluir da biblioteca">×</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="painel-grade">
+      <section class="painel">
+        <div class="section-head">
+          <h2>Minha avaliação</h2>
+          ${c.nota_pessoal != null ? `<button type="button" class="btn-texto btn-pequeno" data-avaliar="${c.id_tmdb}">Editar</button>` : ''}
+        </div>
+        ${c.nota_pessoal != null
+        ? `<p class="painel-nota">★ <strong>${c.nota_pessoal}</strong><span>/10</span></p>`
+        : `<button type="button" class="vazio vazio-acao" data-avaliar="${c.id_tmdb}">☆ Avaliar conteúdo</button>`}
+      </section>
+
+      <section class="painel">
+        <h2 class="painel-titulo">Minhas sessões</h2>
+        <p class="painel-sub">Assistido ${sessoes.length} ${sessoes.length === 1 ? 'vez' : 'vezes'}.</p>
+        ${sessoes.length
+        ? `<div class="lista">${sessoes.map((s, i) => sessaoDetalheHTML(s, i >= SESSOES_INICIAIS)).join('')}</div>
+               ${sessoes.length > SESSOES_INICIAIS
+            ? `<button type="button" class="btn-texto ver-mais" data-ver-mais data-passo="${SESSOES_POR_CLIQUE}">Ver mais (${sessoes.length - SESSOES_INICIAIS})</button>`
+            : ''}`
+        : '<p class="painel-sub">Nenhuma sessão registrada ainda.</p>'}
+      </section>
+    </div>
+
+    ${c.tipo === 'serie' ? temporadasHTML(c) : ''}`;
+}
+
 export const vazio = msg => `<div class="vazio">${esc(msg)}</div>`;

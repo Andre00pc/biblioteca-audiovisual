@@ -94,6 +94,88 @@
     </form>
 </dialog>
 
+<dialog id="modal-sessao" class="modal">
+    <form id="form-sessao" class="modal-form">
+
+        <header class="modal-topo">
+            <div>
+                <h2>Registrar assistência</h2>
+                <p id="sessao-sub"></p>
+            </div>
+            <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">×</button>
+        </header>
+
+        <div class="modal-corpo">
+            <label class="campo">
+                Data
+                <input id="sessao-data" name="data" type="date" required>
+            </label>
+
+            <label class="campo">
+                Comentário (opcional)
+                <textarea name="comentario" rows="3"></textarea>
+            </label>
+        </div>
+
+        <footer class="modal-rodape">
+            <button type="button" class="btn-texto" data-fechar>Cancelar</button>
+            <button type="submit" class="btn">Registrar</button>
+        </footer>
+
+    </form>
+</dialog>
+
+<dialog id="modal-comentario" class="modal">
+    <form id="form-comentario" class="modal-form">
+
+        <header class="modal-topo">
+            <div>
+                <h2>Adicionar comentário</h2>
+                <p>Registre suas impressões sobre essa assistência.</p>
+            </div>
+            <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">×</button>
+        </header>
+
+        <div class="modal-corpo">
+            <label class="campo">
+                Comentário
+                <textarea name="comentario" rows="3" required></textarea>
+            </label>
+        </div>
+
+        <footer class="modal-rodape">
+            <button type="button" class="btn-texto" data-fechar>Cancelar</button>
+            <button type="submit" class="btn">Salvar comentário</button>
+        </footer>
+
+    </form>
+</dialog>
+
+<dialog id="modal-avaliacao" class="modal">
+    <form id="form-avaliacao" class="modal-form">
+
+        <header class="modal-topo">
+            <div>
+                <h2 id="avaliacao-titulo">Avaliar</h2>
+                <p>Sua opinião geral. Cada conteúdo tem apenas uma avaliação, que você pode editar quando quiser.</p>
+            </div>
+            <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">×</button>
+        </header>
+
+        <div class="modal-corpo">
+            <div class="campo">
+                Nota pessoal (0 a 10)
+                <div class="filtros-linha filtros-chips" id="avaliacao-notas"></div>
+            </div>
+        </div>
+
+        <footer class="modal-rodape">
+            <button type="button" class="btn-texto" data-fechar>Cancelar</button>
+            <button type="submit" class="btn" id="btn-salvar-avaliacao" disabled>Salvar avaliação</button>
+        </footer>
+
+    </form>
+</dialog>
 
 <script type="module" src="js/app.js"></script>
 </body>
