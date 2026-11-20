@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Titulo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<aside class="sidebar">
+    <div class="logo"><span class="logo-icon">icon</span><span>Tit<b>ulo</b></span></div>
+    <nav id="menu">
+        <a href="#dashboard" data-route="dashboard">Dashboard</a>
+        <a href="#colecao" data-route="colecao">Minha coleção</a>
+        <a href="#filmes" data-route="filmes">Filmes</a>
+        <a href="#series" data-route="series">Séries</a>
+        <a href="#assistir-depois" data-route="assistir-depois">Assistir depois</a>
+        <a href="#historico" data-route="historico">Histórico</a>
+        <a href="#favoritos" data-route="favoritos">Favoritos</a>
+    </nav>
+    <button type="button" id="btn-adicionar" class="btn-adicionar">+ Adicionar</button>
+</aside>
+<main id="main-content"></main>
+
+
+<dialog id="modal-adicionar" class="modal">
+    <form id="form-adicionar" class="modal-form">
+
+        <header class="modal-topo">
+            <div>
+                <h2>Adicionar à coleção</h2>
+                <p>Busque o filme ou a série e escolha como quer guardar.</p>
+            </div>
+            <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">×</button>
+        </header>
+
+        <div class="modal-corpo">
+
+            <div id="etapa-busca" class="modal-etapa">
+                <div class="alternar">
+                    <button type="button" class="alternar-btn active" data-tipo="filme">Filme</button>
+                    <button type="button" class="alternar-btn" data-tipo="serie">Série</button>
+                </div>
+
+                <label class="campo">
+                    Nome
+                    <input id="campo-titulo" type="search" placeholder="Digite o nome do filme ou da série" autocomplete="off">
+                </label>
+
+                <div class="resultados" id="resultados"></div>
+            </div>
+
+            <div id="etapa-config" class="modal-etapa" hidden>
+                <div class="escolhido" id="escolhido"></div>
+
+                <div class="grupo" role="radiogroup" aria-label="Estado">
+                    Estado
+                    <div class="estados">
+                        <label class="estado">
+                            <input type="radio" name="status_biblioteca" value="Assistir Depois" checked>
+                            <span>Assistir depois</span>
+                        </label>
+                        <label class="estado">
+                            <input type="radio" name="status_biblioteca" value="Assistindo">
+                            <span>Assistindo</span>
+                        </label>
+                        <label class="estado">
+                            <input type="radio" name="status_biblioteca" value="Concluído">
+                            <span>Concluído</span>
+                        </label>
+                    </div>
+                </div>
+
+                <label class="check">
+                    <input type="checkbox" name="favorito">
+                    Marcar como favorito
+                </label>
+
+                <button type="button" class="btn-texto" id="trocar-titulo">↩ Escolher outro título</button>
+            </div>
+
+            <p class="modal-erro" id="modal-erro" hidden></p>
+        </div>
+
+        <footer class="modal-rodape">
+            <button type="button" class="btn-texto" data-fechar>Cancelar</button>
+            <button type="submit" class="btn" id="btn-salvar" disabled>Salvar</button>
+        </footer>
+
+    </form>
+</dialog>
+
+<dialog id="modal-sessao" class="modal">
+    <form id="form-sessao" class="modal-form">
+
+        <header class="modal-topo">
+            <div>
+                <h2>Registrar assistência</h2>
+                <p id="sessao-sub"></p>
+            </div>
+            <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">×</button>
+        </header>
+
+        <div class="modal-corpo">
+            <label class="campo">
+                Data
+                <input id="sessao-data" name="data" type="date" required>
+            </label>
+
+            <label class="campo">
+                Comentário (opcional)
+                <textarea name="comentario" rows="3"></textarea>
+            </label>
+        </div>
+
+        <footer class="modal-rodape">
+            <button type="button" class="btn-texto" data-fechar>Cancelar</button>
+            <button type="submit" class="btn">Registrar</button>
+        </footer>
+
+    </form>
+</dialog>
+
+<dialog id="modal-comentario" class="modal">
+    <form id="form-comentario" class="modal-form">
+
+        <header class="modal-topo">
+            <div>
+                <h2>Adicionar comentário</h2>
+                <p>Registre suas impressões sobre essa assistência.</p>
+            </div>
+            <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">×</button>
+        </header>
+
+        <div class="modal-corpo">
+            <label class="campo">
+                Comentário
+                <textarea name="comentario" rows="3" required></textarea>
+            </label>
+        </div>
+
+        <footer class="modal-rodape">
+            <button type="button" class="btn-texto" data-fechar>Cancelar</button>
+            <button type="submit" class="btn">Salvar comentário</button>
+        </footer>
+
+    </form>
+</dialog>
+
+<dialog id="modal-avaliacao" class="modal">
+    <form id="form-avaliacao" class="modal-form">
+
+        <header class="modal-topo">
+            <div>
+                <h2 id="avaliacao-titulo">Avaliar</h2>
+                <p>Sua opinião geral. Cada conteúdo tem apenas uma avaliação, que você pode editar quando quiser.</p>
+            </div>
+            <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">×</button>
+        </header>
+
+        <div class="modal-corpo">
+            <div class="campo">
+                Nota pessoal (0 a 10)
+                <div class="filtros-linha filtros-chips" id="avaliacao-notas"></div>
+            </div>
+        </div>
+
+        <footer class="modal-rodape">
+            <button type="button" class="btn-texto" data-fechar>Cancelar</button>
+            <button type="submit" class="btn" id="btn-salvar-avaliacao" disabled>Salvar avaliação</button>
+        </footer>
+
+    </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
